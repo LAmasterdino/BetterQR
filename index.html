@@ -1,165 +1,838 @@
 <!DOCTYPE html><html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Better QR Code Generator</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Code Generator Pro</title>
+  <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.0/lib/qr-code-styling.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }.container {
-  background: rgba(255,255,255,0.1);
-  padding: 20px;
-  border-radius: 20px;
-  backdrop-filter: blur(10px);
-  width: 380px;
-  text-align: center;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    :root {
+      --bg1: #0f172a;
+      --bg2: #111827;
+      --card: rgba(255, 255, 255, 0.08);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --text: #f8fafc;
+      --muted: rgba(248, 250, 252, 0.72);
+      --accent: #60a5fa;
+      --accent-2: #22c55e;
+      --danger: #fb7185;
+      --shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+      --radius: 24px;
+    }* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.22), transparent 30%),
+    radial-gradient(circle at top right, rgba(34, 197, 94, 0.16), transparent 26%),
+    linear-gradient(135deg, var(--bg1), var(--bg2));
+  padding: 18px;
 }
 
-input, button {
+.app {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.08fr 0.92fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.panel,
+.preview-panel {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.panel {
+  padding: 18px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.title h1 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.4vw, 2rem);
+  line-height: 1.1;
+}
+
+.title p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.badge {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(96, 165, 250, 0.16);
+  border: 1px solid rgba(96, 165, 250, 0.24);
+  color: #dbeafe;
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.full { grid-column: 1 / -1; }
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+label {
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+input[type="text"],
+select,
+input[type="number"] {
   width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  border-radius: 10px;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  outline: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 1rem;
 }
 
-input[type="color"], input[type="range"] {
-  height: 40px;
-}
+input::placeholder { color: rgba(248, 250, 252, 0.5); }
 
-button {
-  background: #00c6ff;
-  color: white;
+input[type="color"] {
+  width: 100%;
+  height: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 6px;
   cursor: pointer;
-  font-weight: bold;
 }
 
-#qrcode {
-  margin-top: 20px;
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.range-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.segmented button,
+.actions button,
+.small-actions button {
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  color: white;
+  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.16);
+}
+
+.segmented button { background: rgba(255, 255, 255, 0.08); color: var(--text); }
+.segmented button.active { background: linear-gradient(135deg, var(--accent), #8b5cf6); }
+.actions button.primary { background: linear-gradient(135deg, var(--accent), #8b5cf6); }
+.actions button.secondary { background: linear-gradient(135deg, #14b8a6, #22c55e); }
+.actions button.ghost,
+.small-actions button.ghost { background: rgba(255, 255, 255, 0.08); color: var(--text); }
+.actions button.danger { background: linear-gradient(135deg, #f43f5e, #fb7185); }
+
+.segmented button:hover,
+.actions button:hover,
+.small-actions button:hover { transform: translateY(-1px); }
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.actions .full-btn { grid-column: 1 / -1; }
+
+.upload-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+input[type="file"] {
+  width: 100%;
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+  border-radius: 14px;
+  padding: 11px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.history {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(54px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.history button {
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  aspect-ratio: 1;
+}
+
+.history img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hint {
+  margin-top: 8px;
+  font-size: 0.84rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.preview-panel {
+  padding: 18px;
+  position: sticky;
+  top: 18px;
+}
+
+.preview-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.preview-top h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.preview-top span {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.qr-wrap {
+  display: grid;
+  place-items: center;
+  min-height: 520px;
+  padding: 18px;
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.qr-stage {
   position: relative;
-  display: inline-block;
-  padding: 10px;
-  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  border-radius: 24px;
+  background: white;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
 }
 
-#logo {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  border-radius: 10px;
-  display: none;
+#qr {
+  display: grid;
+  place-items: center;
+  background: transparent;
+}
+
+.preview-meta {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.footer-note {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.small-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.toggle-row input { width: auto; accent-color: var(--accent); }
+
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 1040px) {
+  .app { grid-template-columns: 1fr; }
+  .preview-panel { position: static; }
+  .qr-wrap { min-height: 420px; }
+}
+
+@media (max-width: 720px) {
+  body { padding: 10px; }
+  .panel, .preview-panel { padding: 14px; border-radius: 20px; }
+  .grid, .split { grid-template-columns: 1fr; }
+  .actions, .small-actions, .segmented { grid-template-columns: 1fr; }
+  .header, .preview-top { flex-direction: column; align-items: flex-start; }
+  .qr-wrap { min-height: 340px; padding: 12px; }
+  .qr-stage { padding: 10px; }
 }
 
   </style>
 </head>
-<body><div class="container">
-  <h2>Better QR Code Generator</h2>  <input type="text" id="text" placeholder="Text oder URL"><label>Vordergrundfarbe</label> <input type="color" id="fgColor" value="#000000">
+<body>
+  <div class="app">
+    <section class="panel">
+      <div class="header">
+        <div class="title">
+          <h1>QR Code Generator Pro</h1>
+          <p>Modern, mobil optimiert, mit Logo-Historie, Styling und Export als PNG oder SVG.</p>
+        </div>
+        <div class="badge">Live-Vorschau</div>
+      </div><div class="grid">
+    <div class="field full">
+      <label for="text">Text oder URL</label>
+      <input id="text" type="text" placeholder="https://deine-seite.de oder beliebiger Text" value="https://openai.com" />
+    </div>
 
-<label>Hintergrundfarbe</label> <input type="color" id="bgColor" value="#ffffff">
+    <div class="field">
+      <label for="fgColor">Vordergrundfarbe</label>
+      <input id="fgColor" type="color" value="#111827" />
+    </div>
 
-<label>Logo Größe</label> <input type="range" id="logoSize" min="30" max="120" value="60">
+    <div class="field">
+      <label for="bgColor">Hintergrundfarbe</label>
+      <input id="bgColor" type="color" value="#ffffff" />
+    </div>
 
-<button onclick="generateQR()">Generieren</button> <button onclick="downloadQR()">Download PNG (mit Rand)</button>
+    <div class="field">
+      <label for="stylePreset">QR-Stil</label>
+      <select id="stylePreset">
+        <option value="square">Square</option>
+        <option value="rounded" selected>Rounded</option>
+        <option value="dots">Dots</option>
+        <option value="classy">Classy</option>
+      </select>
+    </div>
 
-  <input type="file" id="upload" accept="image/*">  <div id="qrcode"><img id="logo"></div>
-</div><script>
-let currentLogo = null;
+    <div class="field">
+      <label for="errorCorrection">Fehlerkorrektur</label>
+      <select id="errorCorrection">
+        <option value="L">L</option>
+        <option value="M">M</option>
+        <option value="Q">Q</option>
+        <option value="H" selected>H</option>
+      </select>
+    </div>
 
-function generateQR() {
-  const text = document.getElementById("text").value;
-  const fg = document.getElementById("fgColor").value;
-  const bg = document.getElementById("bgColor").value;
-  const container = document.getElementById("qrcode");
+    <div class="field">
+      <label for="size">Größe</label>
+      <div class="range-row"><span>Klein</span><span id="sizeLabel">800 px</span><span>Groß</span></div>
+      <input id="size" type="range" min="320" max="1200" value="800" />
+    </div>
 
-  container.innerHTML = '<img id="logo">';
+    <div class="field">
+      <label for="margin">Rand / Padding</label>
+      <div class="range-row"><span>Schmal</span><span id="marginLabel">24</span><span>Breit</span></div>
+      <input id="margin" type="range" min="0" max="80" value="24" />
+    </div>
 
-  new QRCode(container, {
-    text: text,
-    width: 250,
-    height: 250,
-    colorDark: fg,
-    colorLight: bg,
-    correctLevel: QRCode.CorrectLevel.H
-  });
+    <div class="field">
+      <label for="logoSize">Logo-Größe</label>
+      <div class="range-row"><span>Klein</span><span id="logoSizeLabel">160 px</span><span>Groß</span></div>
+      <input id="logoSize" type="range" min="40" max="260" value="160" />
+    </div>
 
-  setTimeout(() => applyLogo(), 200);
-}
+    <div class="field full">
+      <label for="upload">Logo hochladen</label>
+      <input id="upload" type="file" accept="image/*" />
+      <div class="hint">Hochgeladene Logos werden lokal im Browser gespeichert und können später erneut ausgewählt werden.</div>
+    </div>
 
-function applyLogo() {
-  const logo = document.getElementById("logo");
-  const size = document.getElementById("logoSize").value;
+    <div class="field full">
+      <label>Gespeicherte Logos</label>
+      <div id="history" class="history"></div>
+    </div>
 
-  if (currentLogo) {
-    logo.src = currentLogo;
-    logo.style.width = size + "px";
-    logo.style.height = size + "px";
-    logo.style.display = "block";
-  }
-}
+    <div class="field full">
+      <div class="toggle-row">
+        <div>
+          <strong>Logo im QR einbetten</strong>
+          <div class="hint" style="margin:4px 0 0;">Für besseren Kontrast wird im Export ein weißer Kasten hinterlegt.</div>
+        </div>
+        <input id="useLogo" type="checkbox" checked />
+      </div>
+    </div>
 
-document.getElementById("upload").addEventListener("change", function(e) {
-  const file = e.target.files[0];
-  const reader = new FileReader();
+    <div class="field full">
+      <div class="toggle-row">
+        <div>
+          <strong>Live-Aktualisierung</strong>
+          <div class="hint" style="margin:4px 0 0;">Änderungen werden automatisch übernommen.</div>
+        </div>
+        <input id="liveUpdate" type="checkbox" checked />
+      </div>
+    </div>
 
-  reader.onload = function(event) {
-    currentLogo = event.target.result;
-    applyLogo();
-  };
+    <div class="field full">
+      <label>QR-Optik</label>
+      <div class="segmented">
+        <button class="active" data-shape="rounded">Rounded</button>
+        <button data-shape="dots">Dots</button>
+        <button data-shape="square">Square</button>
+      </div>
+    </div>
+  </div>
 
-  reader.readAsDataURL(file);
-});
+  <div class="actions">
+    <button class="primary" id="generateBtn">QR generieren</button>
+    <button class="secondary" id="pngBtn">PNG herunterladen</button>
+    <button class="ghost" id="svgBtn">SVG herunterladen</button>
+    <button class="ghost" id="copyBtn">Bilddaten kopieren</button>
+    <button class="danger full-btn" id="resetBtn">Zurücksetzen</button>
+  </div>
+</section>
 
-function downloadQR() {
-  const canvas = document.querySelector("#qrcode canvas");
-  if (!canvas) return alert("Bitte QR Code generieren");
+<aside class="preview-panel">
+  <div class="preview-top">
+    <div>
+      <h2>Vorschau</h2>
+      <span>Weißer Export-Rand für bessere Scanbarkeit auf farbigen Flächen</span>
+    </div>
+    <div class="badge" id="statusBadge">Bereit</div>
+  </div>
 
-  const size = 300;
-  const padding = 40; // weißer Rand
+  <div class="qr-wrap">
+    <div class="qr-stage" id="exportStage">
+      <div id="qr"></div>
+    </div>
+  </div>
 
-  const finalCanvas = document.createElement("canvas");
-  finalCanvas.width = size + padding * 2;
-  finalCanvas.height = size + padding * 2;
+  <div class="preview-meta">
+    <div class="meta-row"><span>Textlänge</span><span id="textCount">0 Zeichen</span></div>
+    <div class="meta-row"><span>Logo</span><span id="logoInfo">Kein Logo</span></div>
+    <div class="meta-row"><span>Stil</span><span id="styleInfo">Rounded</span></div>
+  </div>
 
-  const ctx = finalCanvas.getContext("2d");
+  <div class="footer-note">
+    PNG und SVG werden mit weißem Hintergrund und zusätzlichem Rand exportiert. Die Vorschau kann farbige Hintergründe zeigen, der Export bleibt scanfreundlich.
+  </div>
+</aside>
 
-  // Weißer Hintergrund
-  ctx.fillStyle = "white";
-  ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-
-  // QR Code zeichnen
-  ctx.drawImage(canvas, padding, padding, size, size);
-
-  // Logo hinzufügen
-  if (currentLogo) {
-    const img = new Image();
-    img.onload = function() {
-      const logoSize = document.getElementById("logoSize").value;
-      const x = finalCanvas.width/2 - logoSize/2;
-      const y = finalCanvas.height/2 - logoSize/2;
-      ctx.drawImage(img, x, y, logoSize, logoSize);
-
-      triggerDownload(finalCanvas);
+  </div>  <script>
+    const els = {
+      text: document.getElementById('text'),
+      fgColor: document.getElementById('fgColor'),
+      bgColor: document.getElementById('bgColor'),
+      stylePreset: document.getElementById('stylePreset'),
+      errorCorrection: document.getElementById('errorCorrection'),
+      size: document.getElementById('size'),
+      margin: document.getElementById('margin'),
+      logoSize: document.getElementById('logoSize'),
+      upload: document.getElementById('upload'),
+      history: document.getElementById('history'),
+      useLogo: document.getElementById('useLogo'),
+      liveUpdate: document.getElementById('liveUpdate'),
+      generateBtn: document.getElementById('generateBtn'),
+      pngBtn: document.getElementById('pngBtn'),
+      svgBtn: document.getElementById('svgBtn'),
+      copyBtn: document.getElementById('copyBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+      qr: document.getElementById('qr'),
+      exportStage: document.getElementById('exportStage'),
+      statusBadge: document.getElementById('statusBadge'),
+      sizeLabel: document.getElementById('sizeLabel'),
+      marginLabel: document.getElementById('marginLabel'),
+      logoSizeLabel: document.getElementById('logoSizeLabel'),
+      textCount: document.getElementById('textCount'),
+      logoInfo: document.getElementById('logoInfo'),
+      styleInfo: document.getElementById('styleInfo')
     };
-    img.src = currentLogo;
-  } else {
-    triggerDownload(finalCanvas);
-  }
-}
 
-function triggerDownload(canvas) {
-  const link = document.createElement("a");
-  link.download = "qrcode_pro.png";
-  link.href = canvas.toDataURL("image/png");
-  link.click();
-}
-</script></body>
+    const STORAGE_KEY = 'qr_gen_pro_logo_history_v1';
+    const MAX_HISTORY = 8;
+    let selectedShape = 'rounded';
+    let historyItems = loadHistory();
+
+    const qrCode = new QRCodeStyling({
+      width: Number(els.size.value),
+      height: Number(els.size.value),
+      type: 'canvas',
+      data: els.text.value,
+      image: '',
+      margin: Number(els.margin.value),
+      qrOptions: {
+        errorCorrectionLevel: els.errorCorrection.value,
+      },
+      imageOptions: {
+        crossOrigin: 'anonymous',
+        margin: 6,
+        hideBackgroundDots: true,
+      },
+      dotsOptions: {
+        color: els.fgColor.value,
+        type: selectedShape,
+      },
+      cornersSquareOptions: {
+        color: els.fgColor.value,
+        type: 'extra-rounded',
+      },
+      cornersDotOptions: {
+        color: els.fgColor.value,
+        type: 'dot',
+      },
+      backgroundOptions: {
+        color: els.bgColor.value,
+      }
+    });
+
+    qrCode.append(els.qr);
+
+    function setStatus(text) {
+      els.statusBadge.textContent = text;
+    }
+
+    function loadHistory() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      } catch {
+        return [];
+      }
+    }
+
+    function saveHistory() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(historyItems.slice(0, MAX_HISTORY)));
+    }
+
+    function updateHistoryUI() {
+      els.history.innerHTML = '';
+      if (!historyItems.length) {
+        els.history.innerHTML = '<div class="hint full">Noch keine Logos gespeichert.</div>';
+        return;
+      }
+
+      historyItems.forEach((src, index) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.title = `Logo ${index + 1} verwenden`;
+        btn.innerHTML = `<img src="${src}" alt="Gespeichertes Logo ${index + 1}">`;
+        btn.addEventListener('click', () => {
+          currentLogo = src;
+          els.useLogo.checked = true;
+          renderQR();
+          setStatus('Logo gewählt');
+          updateMeta();
+        });
+        els.history.appendChild(btn);
+      });
+    }
+
+    function clampHistory(src) {
+      historyItems = [src, ...historyItems.filter(item => item !== src)].slice(0, MAX_HISTORY);
+      saveHistory();
+      updateHistoryUI();
+    }
+
+    function shapeOptions(shape) {
+      if (shape === 'square') {
+        return {
+          dotsOptions: { color: els.fgColor.value, type: 'square' },
+          cornersSquareOptions: { color: els.fgColor.value, type: 'square' },
+          cornersDotOptions: { color: els.fgColor.value, type: 'square' }
+        };
+      }
+      if (shape === 'dots') {
+        return {
+          dotsOptions: { color: els.fgColor.value, type: 'dots' },
+          cornersSquareOptions: { color: els.fgColor.value, type: 'extra-rounded' },
+          cornersDotOptions: { color: els.fgColor.value, type: 'dot' }
+        };
+      }
+      if (shape === 'classy') {
+        return {
+          dotsOptions: { color: els.fgColor.value, type: 'classy' },
+          cornersSquareOptions: { color: els.fgColor.value, type: 'extra-rounded' },
+          cornersDotOptions: { color: els.fgColor.value, type: 'dot' }
+        };
+      }
+      return {
+        dotsOptions: { color: els.fgColor.value, type: 'rounded' },
+        cornersSquareOptions: { color: els.fgColor.value, type: 'extra-rounded' },
+        cornersDotOptions: { color: els.fgColor.value, type: 'dot' }
+      };
+    }
+
+    let currentLogo = historyItems[0] || null;
+
+    function updateMeta() {
+      els.sizeLabel.textContent = `${els.size.value} px`;
+      els.marginLabel.textContent = els.margin.value;
+      els.logoSizeLabel.textContent = `${els.logoSize.value} px`;
+      els.textCount.textContent = `${els.text.value.length} Zeichen`;
+      els.styleInfo.textContent = selectedShape.charAt(0).toUpperCase() + selectedShape.slice(1);
+      els.logoInfo.textContent = els.useLogo.checked ? (currentLogo ? 'Logo aktiv' : 'Kein Logo gewählt') : 'Deaktiviert';
+    }
+
+    function buildOptions({ forExport = false, exportFormat = 'png' } = {}) {
+      const size = Number(els.size.value);
+      const margin = Number(els.margin.value);
+      const logoSize = Number(els.logoSize.value);
+      const bg = '#ffffff';
+
+      const image = els.useLogo.checked && currentLogo ? currentLogo : '';
+      const logoMargin = Math.max(4, Math.round(logoSize * 0.12));
+
+      return {
+        width: size,
+        height: size,
+        type: exportFormat === 'svg' ? 'svg' : 'canvas',
+        data: els.text.value || ' ',
+        image,
+        margin: forExport ? Math.max(24, margin) : margin,
+        qrOptions: {
+          errorCorrectionLevel: els.errorCorrection.value,
+        },
+        imageOptions: {
+          crossOrigin: 'anonymous',
+          margin: logoMargin,
+          hideBackgroundDots: true,
+          imageSize: els.useLogo.checked && currentLogo ? Math.min(0.30, Math.max(0.18, logoSize / size)) : 0.22,
+        },
+        dotsOptions: shapeOptions(selectedShape).dotsOptions,
+        cornersSquareOptions: shapeOptions(selectedShape).cornersSquareOptions,
+        cornersDotOptions: shapeOptions(selectedShape).cornersDotOptions,
+        backgroundOptions: {
+          color: forExport ? bg : els.bgColor.value,
+        }
+      };
+    }
+
+    async function renderQR() {
+      try {
+        if (!els.text.value.trim()) {
+          setStatus('Text eingeben');
+          return;
+        }
+        qrCode.update(buildOptions());
+        updateMeta();
+        setStatus('Aktualisiert');
+      } catch (err) {
+        console.error(err);
+        setStatus('Fehler');
+      }
+    }
+
+    async function download(format) {
+      try {
+        if (!els.text.value.trim()) {
+          alert('Bitte zuerst einen Text oder eine URL eingeben.');
+          return;
+        }
+
+        const exportQr = new QRCodeStyling(buildOptions({ forExport: true, exportFormat: format }));
+        const filename = `qrcode_${Date.now()}.${format}`;
+
+        if (format === 'svg') {
+          const blob = await exportQr.getRawData('svg');
+          if (!blob) throw new Error('SVG export failed');
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } else {
+          const blob = await exportQr.getRawData('png');
+          if (!blob) throw new Error('PNG export failed');
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+        setStatus(`${format.toUpperCase()} gespeichert`);
+      } catch (err) {
+        console.error(err);
+        alert('Der Export konnte nicht erstellt werden.');
+        setStatus('Export fehlgeschlagen');
+      }
+    }
+
+    function copyImageData() {
+      try {
+        const canvas = els.qr.querySelector('canvas');
+        if (!canvas) {
+          alert('Bitte zuerst einen QR-Code generieren.');
+          return;
+        }
+        canvas.toBlob(async (blob) => {
+          if (!blob) return;
+          if (navigator.clipboard && window.ClipboardItem) {
+            try {
+              await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+              setStatus('Bild kopiert');
+              return;
+            } catch {}
+          }
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'qrcode.png';
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          setStatus('Bild geladen');
+        }, 'image/png');
+      } catch (err) {
+        console.error(err);
+        alert('Kopieren nicht möglich. Nutze stattdessen den PNG-Download.');
+      }
+    }
+
+    function resetAll() {
+      els.text.value = 'https://openai.com';
+      els.fgColor.value = '#111827';
+      els.bgColor.value = '#ffffff';
+      els.stylePreset.value = 'rounded';
+      els.errorCorrection.value = 'H';
+      els.size.value = 800;
+      els.margin.value = 24;
+      els.logoSize.value = 160;
+      els.useLogo.checked = true;
+      els.liveUpdate.checked = true;
+      selectedShape = 'rounded';
+      currentLogo = historyItems[0] || null;
+      document.querySelectorAll('.segmented button').forEach(btn => btn.classList.toggle('active', btn.dataset.shape === 'rounded'));
+      updateMeta();
+      renderQR();
+      setStatus('Zurückgesetzt');
+    }
+
+    function handleLogoUpload(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        currentLogo = String(e.target.result);
+        clampHistory(currentLogo);
+        els.useLogo.checked = true;
+        renderQR();
+        updateMeta();
+        setStatus('Logo gespeichert');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function bindAutoUpdate(el, event = 'input') {
+      el.addEventListener(event, () => {
+        updateMeta();
+        if (els.liveUpdate.checked) renderQR();
+      });
+    }
+
+    document.querySelectorAll('.segmented button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedShape = btn.dataset.shape;
+        document.querySelectorAll('.segmented button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updateMeta();
+        if (els.liveUpdate.checked) renderQR();
+      });
+    });
+
+    bindAutoUpdate(els.text);
+    bindAutoUpdate(els.fgColor);
+    bindAutoUpdate(els.bgColor);
+    bindAutoUpdate(els.errorCorrection, 'change');
+    bindAutoUpdate(els.size);
+    bindAutoUpdate(els.margin);
+    bindAutoUpdate(els.logoSize);
+    bindAutoUpdate(els.useLogo, 'change');
+    bindAutoUpdate(els.liveUpdate, 'change');
+    bindAutoUpdate(els.stylePreset, 'change');
+
+    els.stylePreset.addEventListener('change', () => {
+      selectedShape = els.stylePreset.value;
+      document.querySelectorAll('.segmented button').forEach(btn => btn.classList.toggle('active', btn.dataset.shape === selectedShape));
+      if (els.liveUpdate.checked) renderQR();
+    });
+
+    els.upload.addEventListener('change', (e) => handleLogoUpload(e.target.files?.[0]));
+    els.generateBtn.addEventListener('click', renderQR);
+    els.pngBtn.addEventListener('click', () => download('png'));
+    els.svgBtn.addEventListener('click', () => download('svg'));
+    els.copyBtn.addEventListener('click', copyImageData);
+    els.resetBtn.addEventListener('click', resetAll);
+
+    updateHistoryUI();
+    updateMeta();
+    renderQR();
+  </script></body>
 </html>
