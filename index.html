@@ -1,0 +1,165 @@
+<!DOCTYPE html><html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Better QR Code Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }.container {
+  background: rgba(255,255,255,0.1);
+  padding: 20px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  width: 380px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+input, button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: none;
+}
+
+input[type="color"], input[type="range"] {
+  height: 40px;
+}
+
+button {
+  background: #00c6ff;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+#qrcode {
+  margin-top: 20px;
+  position: relative;
+  display: inline-block;
+  padding: 10px;
+  border-radius: 12px;
+}
+
+#logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 10px;
+  display: none;
+}
+
+  </style>
+</head>
+<body><div class="container">
+  <h2>Better QR Code Generator</h2>  <input type="text" id="text" placeholder="Text oder URL"><label>Vordergrundfarbe</label> <input type="color" id="fgColor" value="#000000">
+
+<label>Hintergrundfarbe</label> <input type="color" id="bgColor" value="#ffffff">
+
+<label>Logo Größe</label> <input type="range" id="logoSize" min="30" max="120" value="60">
+
+<button onclick="generateQR()">Generieren</button> <button onclick="downloadQR()">Download PNG (mit Rand)</button>
+
+  <input type="file" id="upload" accept="image/*">  <div id="qrcode"><img id="logo"></div>
+</div><script>
+let currentLogo = null;
+
+function generateQR() {
+  const text = document.getElementById("text").value;
+  const fg = document.getElementById("fgColor").value;
+  const bg = document.getElementById("bgColor").value;
+  const container = document.getElementById("qrcode");
+
+  container.innerHTML = '<img id="logo">';
+
+  new QRCode(container, {
+    text: text,
+    width: 250,
+    height: 250,
+    colorDark: fg,
+    colorLight: bg,
+    correctLevel: QRCode.CorrectLevel.H
+  });
+
+  setTimeout(() => applyLogo(), 200);
+}
+
+function applyLogo() {
+  const logo = document.getElementById("logo");
+  const size = document.getElementById("logoSize").value;
+
+  if (currentLogo) {
+    logo.src = currentLogo;
+    logo.style.width = size + "px";
+    logo.style.height = size + "px";
+    logo.style.display = "block";
+  }
+}
+
+document.getElementById("upload").addEventListener("change", function(e) {
+  const file = e.target.files[0];
+  const reader = new FileReader();
+
+  reader.onload = function(event) {
+    currentLogo = event.target.result;
+    applyLogo();
+  };
+
+  reader.readAsDataURL(file);
+});
+
+function downloadQR() {
+  const canvas = document.querySelector("#qrcode canvas");
+  if (!canvas) return alert("Bitte QR Code generieren");
+
+  const size = 300;
+  const padding = 40; // weißer Rand
+
+  const finalCanvas = document.createElement("canvas");
+  finalCanvas.width = size + padding * 2;
+  finalCanvas.height = size + padding * 2;
+
+  const ctx = finalCanvas.getContext("2d");
+
+  // Weißer Hintergrund
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+
+  // QR Code zeichnen
+  ctx.drawImage(canvas, padding, padding, size, size);
+
+  // Logo hinzufügen
+  if (currentLogo) {
+    const img = new Image();
+    img.onload = function() {
+      const logoSize = document.getElementById("logoSize").value;
+      const x = finalCanvas.width/2 - logoSize/2;
+      const y = finalCanvas.height/2 - logoSize/2;
+      ctx.drawImage(img, x, y, logoSize, logoSize);
+
+      triggerDownload(finalCanvas);
+    };
+    img.src = currentLogo;
+  } else {
+    triggerDownload(finalCanvas);
+  }
+}
+
+function triggerDownload(canvas) {
+  const link = document.createElement("a");
+  link.download = "qrcode_pro.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
+</script></body>
+</html>
